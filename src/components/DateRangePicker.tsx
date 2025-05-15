@@ -60,12 +60,12 @@ const DateRangePicker = ({ fromDate, toDate, onDateChange }: DateRangePickerProp
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+    <div className="w-full flex flex-col space-y-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
         <Popover open={isFromDateOpen} onOpenChange={setIsFromDateOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="w-[180px] justify-start">
-              <CalendarIcon className="mr-2 h-4 w-4" />
+            <Button variant="outline" className="w-full sm:w-[160px] md:w-[180px] justify-start text-sm">
+              <CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               {fromDate ? format(new Date(fromDate), 'dd/MM/yyyy') : "Từ ngày"}
             </Button>
           </PopoverTrigger>
@@ -75,17 +75,17 @@ const DateRangePicker = ({ fromDate, toDate, onDateChange }: DateRangePickerProp
               selected={fromDate ? new Date(fromDate) : undefined}
               onSelect={handleFromDateChange}
               initialFocus
-              className={cn("p-3 pointer-events-auto")}
+              className={cn("p-3")}
             />
           </PopoverContent>
         </Popover>
 
-        <span className="hidden md:block">-</span>
+        <span className="hidden sm:block text-sm">-</span>
         
         <Popover open={isToDateOpen} onOpenChange={setIsToDateOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="w-[180px] justify-start">
-              <CalendarIcon className="mr-2 h-4 w-4" />
+            <Button variant="outline" className="w-full sm:w-[160px] md:w-[180px] justify-start text-sm">
+              <CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               {toDate ? format(new Date(toDate), 'dd/MM/yyyy') : "Đến ngày"}
             </Button>
           </PopoverTrigger>
@@ -95,20 +95,20 @@ const DateRangePicker = ({ fromDate, toDate, onDateChange }: DateRangePickerProp
               selected={toDate ? new Date(toDate) : undefined}
               onSelect={handleToDateChange}
               initialFocus
-              className={cn("p-3 pointer-events-auto")}
+              className={cn("p-3")}
             />
           </PopoverContent>
         </Popover>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
-        <Button variant="outline" size="sm" onClick={setLastWeek}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" className="text-xs sm:text-sm h-8" onClick={setLastWeek}>
           7 ngày
         </Button>
-        <Button variant="outline" size="sm" onClick={setLastMonth}>
+        <Button variant="outline" size="sm" className="text-xs sm:text-sm h-8" onClick={setLastMonth}>
           30 ngày
         </Button>
-        <Button variant="outline" size="sm" onClick={setLastThreeMonths}>
+        <Button variant="outline" size="sm" className="text-xs sm:text-sm h-8" onClick={setLastThreeMonths}>
           90 ngày
         </Button>
       </div>

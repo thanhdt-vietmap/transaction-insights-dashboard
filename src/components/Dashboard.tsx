@@ -62,9 +62,9 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-2">Đã xảy ra lỗi</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2">Đã xảy ra lỗi</h2>
           <p>Không thể tải dữ liệu. Vui lòng thử lại sau.</p>
         </div>
       </div>
@@ -72,22 +72,22 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col space-y-8">
+    <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+      <div className="flex flex-col space-y-4 sm:space-y-6 lg:space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
             Dữ liệu thống kê giao dịch từ {fromDate} đến {toDate}
           </p>
         </div>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle>Thời gian</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Thời gian</CardTitle>
             <CardDescription>Chọn khoảng thời gian để xem dữ liệu</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 gap-4">
               <DateRangePicker 
                 fromDate={fromDate} 
                 toDate={toDate} 
@@ -96,7 +96,7 @@ const Dashboard = () => {
               
               <Button 
                 onClick={handleFetchData} 
-                className="min-w-[120px]"
+                className="w-full md:w-auto md:min-w-[120px]"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -115,11 +115,11 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="space-y-4 sm:space-y-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle>Danh sách tài khoản</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Danh sách tài khoản</CardTitle>
                 <CardDescription>Chọn một tài khoản để xem chi tiết</CardDescription>
               </CardHeader>
               <CardContent>
@@ -144,7 +144,7 @@ const Dashboard = () => {
             </Card>
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {isLoading ? (
               <Card>
                 <CardHeader>
@@ -152,7 +152,7 @@ const Dashboard = () => {
                   <Skeleton className="h-4 w-1/2" />
                 </CardHeader>
                 <CardContent>
-                  <Skeleton className="h-[400px] w-full" />
+                  <Skeleton className="h-[300px] sm:h-[350px] lg:h-[400px] w-full" />
                 </CardContent>
               </Card>
             ) : selectedAccount ? (
@@ -163,7 +163,7 @@ const Dashboard = () => {
                   <CardTitle>Biểu đồ tài khoản</CardTitle>
                   <CardDescription>Chọn một tài khoản để xem biểu đồ</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground">
+                <CardContent className="h-[300px] sm:h-[350px] lg:h-[400px] flex items-center justify-center text-muted-foreground">
                   Chọn một tài khoản từ bảng để hiển thị biểu đồ
                 </CardContent>
               </Card>

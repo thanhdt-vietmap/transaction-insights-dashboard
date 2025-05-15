@@ -39,9 +39,9 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return null;
     return sortDirection === "asc" ? (
-      <ArrowUp className="w-4 h-4 inline ml-1" />
+      <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 inline ml-1" />
     ) : (
-      <ArrowDown className="w-4 h-4 inline ml-1" />
+      <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4 inline ml-1" />
     );
   };
 
@@ -50,42 +50,42 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
       <Table>
         <TableHeader className="bg-gray-50 sticky top-0">
           <TableRow>
-            <TableHead>Tên công ty</TableHead>
+            <TableHead className="font-medium text-xs sm:text-sm whitespace-nowrap">Tên công ty</TableHead>
             <TableHead 
               className={cn(
-                "text-right header-cell", 
+                "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap", 
                 sortField === "valid_txn_cnt" && "header-cell-active"
               )}
               onClick={() => handleSort("valid_txn_cnt")}
             >
-              Giá trị hiện tại {renderSortIcon("valid_txn_cnt")}
+              Hiện tại {renderSortIcon("valid_txn_cnt")}
             </TableHead>
             <TableHead 
               className={cn(
-                "text-right header-cell", 
+                "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap", 
                 sortField === "valid_txn_cnt_range_before" && "header-cell-active"
               )}
               onClick={() => handleSort("valid_txn_cnt_range_before")}
             >
-              Giá trị trước {renderSortIcon("valid_txn_cnt_range_before")}
+              Trước {renderSortIcon("valid_txn_cnt_range_before")}
             </TableHead>
             <TableHead 
               className={cn(
-                "text-right header-cell", 
+                "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap", 
                 sortField === "diff" && "header-cell-active"
               )}
               onClick={() => handleSort("diff")}
             >
-              Chênh lệch {renderSortIcon("diff")}
+              +/- {renderSortIcon("diff")}
             </TableHead>
             <TableHead 
               className={cn(
-                "text-right header-cell", 
+                "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap", 
                 sortField === "percentage" && "header-cell-active"
               )}
               onClick={() => handleSort("percentage")}
             >
-              Tỉ lệ (%) {renderSortIcon("percentage")}
+              % {renderSortIcon("percentage")}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -99,12 +99,12 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
               )}
               onClick={() => onSelectRow(account)}
             >
-              <TableCell className="font-medium">{account.name}</TableCell>
-              <TableCell className="text-right">{formatTransactionCount(account.valid_txn_cnt)}</TableCell>
-              <TableCell className="text-right">{formatTransactionCount(account.valid_txn_cnt_range_before)}</TableCell>
+              <TableCell className="font-medium text-xs sm:text-sm">{account.name}</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt)}</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt_range_before)}</TableCell>
               <TableCell 
                 className={cn(
-                  "text-right font-medium",
+                  "text-right font-medium text-xs sm:text-sm",
                   account.diff > 0 ? "text-green-600" : account.diff < 0 ? "text-red-600" : ""
                 )}
               >
@@ -112,7 +112,7 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
               </TableCell>
               <TableCell 
                 className={cn(
-                  "text-right font-medium",
+                  "text-right font-medium text-xs sm:text-sm",
                   account.percentage && account.percentage > 0 ? "text-green-600" : "text-red-600"
                 )}
               >
