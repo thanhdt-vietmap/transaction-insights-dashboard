@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { AccountData } from "@/services/dataService";
-import { formatNumber, formatPercentage, formatCurrency } from "@/utils/formatters";
+import { formatTransactionCount, formatPercentage } from "@/utils/formatters";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -100,15 +100,15 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
               onClick={() => onSelectRow(account)}
             >
               <TableCell className="font-medium">{account.name}</TableCell>
-              <TableCell className="text-right">{formatCurrency(account.valid_txn_cnt)}</TableCell>
-              <TableCell className="text-right">{formatCurrency(account.valid_txn_cnt_range_before)}</TableCell>
+              <TableCell className="text-right">{formatTransactionCount(account.valid_txn_cnt)}</TableCell>
+              <TableCell className="text-right">{formatTransactionCount(account.valid_txn_cnt_range_before)}</TableCell>
               <TableCell 
                 className={cn(
                   "text-right font-medium",
                   account.diff > 0 ? "text-green-600" : account.diff < 0 ? "text-red-600" : ""
                 )}
               >
-                {formatCurrency(account.diff)}
+                {formatTransactionCount(account.diff)}
               </TableCell>
               <TableCell 
                 className={cn(
