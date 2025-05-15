@@ -111,15 +111,15 @@ const enrichedSampleData: AccountData[] = [
 export const fetchData = async (fromDate: string, toDate: string): Promise<AccountData[]> => {
   try {
     // In a real application, we would fetch from the actual API:
-    // const response = await fetch(`${API_URL}?fromDate=${fromDate}&toDate=${toDate}`);
-    
+    const response = await fetch(`${API_URL}?fromDate=${fromDate}&toDate=${toDate}`);
+    let resData = await response.json();
     // Simulating API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // await new Promise(resolve => setTimeout(resolve, 1000));
     
     console.log(`Fetching data from ${fromDate} to ${toDate}`);
     
     // For demo purposes, using sample data and calculating percentages
-    const data = enrichedSampleData.map(account => {
+    const data = resData.map(account => {
       let percentage = 0;
       if (account.valid_txn_cnt_range_before > 0) {
         percentage = (account.diff / account.valid_txn_cnt_range_before) * 100;
