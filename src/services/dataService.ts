@@ -19,7 +19,7 @@ export interface AccountData {
   valid_txn_cnt: number;
   valid_txn_cnt_range_before: number;
   diff: number;
-  percentage?: number; // Added percentage field
+  percentage?: number;
 }
 
 const API_URL = 'http://192.168.23.239:3000/api/get-daily-req';
@@ -112,7 +112,11 @@ export const fetchData = async (fromDate: string, toDate: string): Promise<Accou
   try {
     // In a real application, we would fetch from the actual API:
     // const response = await fetch(`${API_URL}?fromDate=${fromDate}&toDate=${toDate}`);
-    // const data = await response.json();
+    
+    // Simulating API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log(`Fetching data from ${fromDate} to ${toDate}`);
     
     // For demo purposes, using sample data and calculating percentages
     const data = enrichedSampleData.map(account => {
@@ -130,8 +134,8 @@ export const fetchData = async (fromDate: string, toDate: string): Promise<Accou
   } catch (error) {
     console.error("Failed to fetch data:", error);
     toast({
-      title: "Error fetching data",
-      description: "Could not load account data. Please try again later.",
+      title: "Lỗi tải dữ liệu",
+      description: "Không thể tải dữ liệu tài khoản. Vui lòng thử lại sau.",
       variant: "destructive",
     });
     return [];

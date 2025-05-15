@@ -6,6 +6,10 @@ import DataTable from "@/components/DataTable";
 import AccountChart from "@/components/AccountChart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
+import DateRangePicker from "@/components/DateRangePicker";
+import { RefreshCw } from "lucide-react";
 
 const Dashboard = () => {
   const [selectedAccount, setSelectedAccount] = useState<AccountData | null>(null);
@@ -15,13 +19,20 @@ const Dashboard = () => {
   const lastMonth = new Date();
   lastMonth.setMonth(lastMonth.getMonth() - 1);
   
-  const fromDate = lastMonth.toISOString().split('T')[0];
-  const toDate = today.toISOString().split('T')[0];
+  const [fromDate, setFromDate] = useState(lastMonth.toISOString().split('T')[0]);
+  const [toDate, setToDate] = useState(today.toISOString().split('T')[0]);
+  const [shouldFetch, setShouldFetch] = useState(false);
   
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["accountData", fromDate, toDate],
     queryFn: () => fetchData(fromDate, toDate),
+    enabled: shouldFetch,
   });
+  
+  // Initial fetch when component mounts
+  useEffect(() => {
+    setShouldFetch(true);
+  }, []);
   
   useEffect(() => {
     if (data && data.length > 0 && !selectedAccount) {
@@ -31,6 +42,22 @@ const Dashboard = () => {
 
   const handleSelectRow = (account: AccountData) => {
     setSelectedAccount(account);
+  };
+  
+  const handleDateChange = (newFromDate: string, newToDate: string) => {
+    setFromDate(newFromDate);
+    setToDate(newToDate);
+    setShouldFetch(false); // Disable auto-fetching when date changes
+  };
+  
+  const handleFetchData = () => {
+    setShouldFetch(true);
+    refetch().then(() => {
+      toast({
+        title: "Đã tải dữ liệu",
+        description: `Dữ liệu từ ngày ${fromDate} đến ngày ${toDate} đã được cập nhật.`
+      });
+    });
   };
 
   if (error) {
@@ -54,6 +81,40 @@ const Dashboard = () => {
           </p>
         </div>
 
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Thời gian</CardTitle>
+            <CardDescription>Chọn khoảng thời gian để xem dữ liệu</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <DateRangePicker 
+                fromDate={fromDate} 
+                toDate={toDate} 
+                onDateChange={handleDateChange} 
+              />
+              
+              <Button 
+                onClick={handleFetchData} 
+                className="min-w-[120px]"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Đang tải...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Tải dữ liệu
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
             <Card>
@@ -74,7 +135,11 @@ const Dashboard = () => {
                     onSelectRow={handleSelectRow}
                     selectedAccountId={selectedAccount?.account_id || null}
                   />
-                ) : null}
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nhấn "Tải dữ liệu" để xem danh sách tài khoản
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -90,8 +155,18 @@ const Dashboard = () => {
                   <Skeleton className="h-[400px] w-full" />
                 </CardContent>
               </Card>
-            ) : (
+            ) : selectedAccount ? (
               <AccountChart account={selectedAccount} />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Biểu đồ tài khoản</CardTitle>
+                  <CardDescription>Chọn một tài khoản để xem biểu đồ</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground">
+                  Chọn một tài khoản từ bảng để hiển thị biểu đồ
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>
