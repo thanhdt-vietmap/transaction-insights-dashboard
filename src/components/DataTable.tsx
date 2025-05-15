@@ -102,7 +102,14 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
               <TableCell className="font-medium">{account.name}</TableCell>
               <TableCell className="text-right">{formatCurrency(account.valid_txn_cnt)}</TableCell>
               <TableCell className="text-right">{formatCurrency(account.valid_txn_cnt_range_before)}</TableCell>
-              <TableCell className="text-right">{formatCurrency(account.diff)}</TableCell>
+              <TableCell 
+                className={cn(
+                  "text-right font-medium",
+                  account.diff > 0 ? "text-green-600" : account.diff < 0 ? "text-red-600" : ""
+                )}
+              >
+                {formatCurrency(account.diff)}
+              </TableCell>
               <TableCell 
                 className={cn(
                   "text-right font-medium",
