@@ -1,18 +1,17 @@
-
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AccountData, AccountType } from "@/services/dataService";
 import { formatTransactionCount, formatPercentage } from "@/utils/formatters";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowUp, ArrowDown, Filter } from "lucide-react";
+import { ArrowUp, ArrowDown, Filter, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 type SortField = "valid_txn_cnt" | "valid_txn_cnt_range_before" | "diff" | "percentage";
 type SortDirection = "asc" | "desc";
@@ -26,7 +25,32 @@ interface DataTableProps {
 const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => {
   const [sortField, setSortField] = useState<SortField>("diff");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [selectedAccountType, setSelectedAccountType] = useState<AccountType | "ALL">("ALL");
+  const [selectedAccountTypes, setSelectedAccountTypes] = useState<AccountType[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  
+  // Get unique account types from data (excluding "ALL" which is handled separately)
+  const accountTypes: AccountType[] = Array.from(
+    new Set(data.map(account => account.account_type))
+  ).filter(type => type !== "ALL") as AccountType[];
+
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setIsPopoverOpen(false);
+      }
+    };
+
+    if (isPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isPopoverOpen]);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -37,10 +61,23 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
     }
   };
 
-  // Filter data by account type
-  const filteredData = selectedAccountType === "ALL"
-    ? data
-    : data.filter(account => account.account_type === selectedAccountType);
+  const toggleAccountType = (type: AccountType) => {
+    setSelectedAccountTypes(prev => {
+      // If type already exists in the array, remove it
+      if (prev.includes(type)) {
+        return prev.filter(t => t !== type);
+      } 
+      // Otherwise, add it to the array
+      else {
+        return [...prev, type];
+      }
+    });
+  };
+
+  // Filter data by selected account types
+  const filteredData = selectedAccountTypes.length === 0
+    ? data // If no types selected, show all
+    : data.filter(account => selectedAccountTypes.includes(account.account_type));
 
   // Then sort the filtered data
   const sortedData = [...filteredData].sort((a, b) => {
@@ -70,29 +107,56 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
     }
   };
 
-  // Get unique account types from data
-  const accountTypes = ["ALL", ...Array.from(new Set(data.map(account => account.account_type)))];
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select
-            value={selectedAccountType}
-            onValueChange={(value) => setSelectedAccountType(value as AccountType | "ALL")}
-          >
-            <SelectTrigger className="h-8 w-[180px]">
-              <SelectValue placeholder="Lọc theo loại tài khoản" />
-            </SelectTrigger>
-            <SelectContent>
-              {accountTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type === "ALL" ? "Tất cả" : type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          {selectedAccountTypes.length > 0 && (
+            selectedAccountTypes.map(type => (
+              <Badge 
+                key={type} 
+                className={cn("cursor-pointer", getAccountTypeClass(type))}
+                onClick={() => toggleAccountType(type)}
+              >
+                {type} <span className="ml-1">×</span>
+              </Badge>
+            ))
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2" ref={popoverRef}>
+          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span>Loại tài khoản</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-0" align="end">
+              <div className="p-2">
+                {accountTypes.map((type) => (
+                  <div
+                    key={type}
+                    className={cn(
+                      "flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-gray-100 cursor-pointer",
+                      selectedAccountTypes.includes(type) ? "bg-gray-100" : ""
+                    )}
+                    onClick={() => toggleAccountType(type)}
+                  >
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium", 
+                      getAccountTypeClass(type)
+                    )}>
+                      {type}
+                    </span>
+                    {selectedAccountTypes.includes(type) && (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
