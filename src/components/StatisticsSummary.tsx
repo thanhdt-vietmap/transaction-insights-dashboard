@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { AccountData, AccountType } from "@/services/dataService";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,7 +16,8 @@ const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   "TRIAL": "#38BDF8",   // Light blue
   "INTERNAL": "#818CF8", // Purple
   "STANDARD": "#10B981", // Green
-  "ENTERPRISE": "#F59E0B" // Orange
+  "ENTERPRISE": "#F59E0B", // Orange
+  "ALL": "#64748B"      // Slate
 };
 
 const CHART_TYPES = ["overview", "byType", "comparison"] as const;
