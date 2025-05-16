@@ -169,15 +169,7 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
           <TableHeader className="bg-gray-50 sticky top-0 z-10">
             <TableRow>
               <TableHead className="w-[30%] text-xs sm:text-sm font-medium whitespace-nowrap">Tên công ty</TableHead>
-              <TableHead
-                className={cn(
-                  "w-[15%] text-right font-medium text-xs sm:text-sm whitespace-nowrap",
-                  sortField === "valid_txn_cnt" && "header-cell-active"
-                )}
-                onClick={() => handleSort("valid_txn_cnt")}
-              >
-                Hiện tại {renderSortIcon("valid_txn_cnt")}
-              </TableHead>
+              
               <TableHead
                 className={cn(
                   "w-[15%] text-right font-medium text-xs sm:text-sm whitespace-nowrap",
@@ -186,6 +178,15 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
                 onClick={() => handleSort("valid_txn_cnt_range_before")}
               >
                 Trước {renderSortIcon("valid_txn_cnt_range_before")}
+              </TableHead>
+              <TableHead
+                className={cn(
+                  "w-[15%] text-right font-medium text-xs sm:text-sm whitespace-nowrap",
+                  sortField === "valid_txn_cnt" && "header-cell-active"
+                )}
+                onClick={() => handleSort("valid_txn_cnt")}
+              >
+                Hiện tại {renderSortIcon("valid_txn_cnt")}
               </TableHead>
               <TableHead
                 className={cn(
@@ -220,8 +221,8 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
                   onClick={() => onSelectRow(account)}
                 >
                   <TableCell className="font-medium text-xs sm:text-sm">{account.name}</TableCell>
-                  <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt)}</TableCell>
                   <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt_range_before)}</TableCell>
+                  <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt)}</TableCell>
                   <TableCell
                     className={cn(
                       "text-right font-medium text-xs sm:text-sm",
