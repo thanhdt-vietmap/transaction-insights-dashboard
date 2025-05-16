@@ -1,7 +1,7 @@
 
 import { toast } from "@/components/ui/use-toast";
 
-export type AccountType = "NONE" | "TRIAL" | "INTERNAL" | "STANDARD" | "ENTERPRISE";
+export type AccountType = "NONE" | "TRIAL" | "INTERNAL" | "STANDARD" | "ENTERPRISE" | "ALL";
 
 export interface Contact {
   name: string | null;
