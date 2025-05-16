@@ -44,6 +44,17 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
       <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4 inline ml-1" />
     );
   };
+
+  const getAccountTypeClass = (type: string) => {
+    switch (type) {
+      case "TRIAL": return "bg-blue-100 text-blue-800";
+      case "INTERNAL": return "bg-purple-100 text-purple-800";
+      case "STANDARD": return "bg-green-100 text-green-800";
+      case "ENTERPRISE": return "bg-orange-100 text-orange-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
     <div className="rounded-lg border overflow-hidden">
       <div className="min-w-[800px]">
@@ -87,6 +98,9 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
               >
                 % {renderSortIcon("percentage")}
               </TableHead>
+              <TableHead className="font-medium text-xs sm:text-sm whitespace-nowrap text-center">
+                Loại
+              </TableHead>
             </TableRow>
           </TableHeader>
         </Table>
@@ -123,6 +137,14 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
                   >
                     {formatPercentage(account.percentage || 0)}
                   </TableCell>
+                  <TableCell className="text-center">
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium", 
+                      getAccountTypeClass(account.account_type)
+                    )}>
+                      {account.account_type}
+                    </span>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -131,7 +153,6 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
       </div>
     </div>
   );
-  
 };
 
 export default DataTable;

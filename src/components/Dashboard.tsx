@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchData, AccountData } from "@/services/dataService";
 import DataTable from "@/components/DataTable";
 import AccountChart from "@/components/AccountChart";
+import StatisticsSummary from "@/components/StatisticsSummary";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -113,6 +114,22 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {isLoading ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : data ? (
+        <StatisticsSummary data={data} />
+      ) : (
+        <Card>
+          <CardContent className="p-6 text-center text-gray-500">
+            <p>Nhấn "Tải dữ liệu" để xem thống kê tổng hợp</p>
+          </CardContent>
+        </Card>
+      )}
   
       <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4 sm:gap-6">
         <div className="space-y-4 sm:space-y-6">
@@ -171,7 +188,6 @@ const Dashboard = () => {
       </div>
     </div>
   </div>
-  
   );
 };
 

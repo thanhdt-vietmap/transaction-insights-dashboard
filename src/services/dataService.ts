@@ -1,6 +1,8 @@
 
 import { toast } from "@/components/ui/use-toast";
 
+export type AccountType = "NONE" | "TRIAL" | "INTERNAL" | "STANDARD" | "ENTERPRISE";
+
 export interface Contact {
   name: string | null;
   email: string | null;
@@ -20,6 +22,7 @@ export interface AccountData {
   valid_txn_cnt_range_before: number;
   diff: number;
   percentage?: number;
+  account_type: AccountType;
 }
 
 const API_URL = 'http://192.168.23.239:3000/api/get-daily-req';
@@ -39,7 +42,8 @@ const SAMPLE_DATA: AccountData[] = [
     },
     "valid_txn_cnt": 246508835.44,
     "valid_txn_cnt_range_before": 177345487.07999998,
-    "diff": 69163348.36000001
+    "diff": 69163348.36000001,
+    "account_type": "TRIAL"
   },
   {
     "account_id": "ac6052de-8812-4f99-8c0d-d57cc9bd3c6d",
@@ -54,7 +58,8 @@ const SAMPLE_DATA: AccountData[] = [
     },
     "valid_txn_cnt": 8232256.16,
     "valid_txn_cnt_range_before": 3551780.3999999994,
-    "diff": 4680475.760000001
+    "diff": 4680475.760000001,
+    "account_type": "ENTERPRISE"
   }
 ];
 
@@ -74,7 +79,8 @@ const enrichedSampleData: AccountData[] = [
     },
     "valid_txn_cnt": 154326789.25,
     "valid_txn_cnt_range_before": 135489321.78,
-    "diff": 18837467.47
+    "diff": 18837467.47,
+    "account_type": "STANDARD"
   },
   {
     "account_id": "2q3r4s5t-6u7v-8w9x-0y1z-2a3b4c5d6e7f",
@@ -89,7 +95,8 @@ const enrichedSampleData: AccountData[] = [
     },
     "valid_txn_cnt": 321456789.32,
     "valid_txn_cnt_range_before": 298765432.10,
-    "diff": 22691357.22
+    "diff": 22691357.22,
+    "account_type": "ENTERPRISE"
   },
   {
     "account_id": "8g9h0i1j-2k3l-4m5n-6o7p-8q9r0s1t2u3v",
@@ -104,7 +111,8 @@ const enrichedSampleData: AccountData[] = [
     },
     "valid_txn_cnt": 98765432.10,
     "valid_txn_cnt_range_before": 87654321.09,
-    "diff": 11111111.01
+    "diff": 11111111.01,
+    "account_type": "INTERNAL"
   }
 ];
 
@@ -138,6 +146,19 @@ export const fetchData = async (fromDate: string, toDate: string): Promise<Accou
       description: "Không thể tải dữ liệu tài khoản. Vui lòng thử lại sau.",
       variant: "destructive",
     });
-    return [];
+    
+    // Return demo data for development/preview
+    const demoData = enrichedSampleData.map(account => {
+      let percentage = 0;
+      if (account.valid_txn_cnt_range_before > 0) {
+        percentage = (account.diff / account.valid_txn_cnt_range_before) * 100;
+      }
+      return {
+        ...account,
+        percentage: parseFloat(percentage.toFixed(2))
+      };
+    });
+    
+    return demoData;
   }
 };
