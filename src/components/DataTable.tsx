@@ -107,23 +107,24 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
     }
   };
 
-  return (
-    <div className="space-y-4">
+  return (<div className="rounded-lg border h-[800px] flex flex-col">
+    {/* Header: Bộ lọc và badge */}
+    <div className="p-4 space-y-2 border-b">
       <div className="flex items-center justify-between">
+        {/* Badge lọc loại tài khoản đã chọn */}
         <div className="flex flex-wrap gap-2">
-          {selectedAccountTypes.length > 0 && (
-            selectedAccountTypes.map(type => (
-              <Badge 
-                key={type} 
-                className={cn("cursor-pointer", getAccountTypeClass(type))}
-                onClick={() => toggleAccountType(type)}
-              >
-                {type} <span className="ml-1">×</span>
-              </Badge>
-            ))
-          )}
+          {selectedAccountTypes.map(type => (
+            <Badge
+              key={type}
+              className={cn("cursor-pointer", getAccountTypeClass(type))}
+              onClick={() => toggleAccountType(type)}
+            >
+              {type} <span className="ml-1">×</span>
+            </Badge>
+          ))}
         </div>
-        
+  
+        {/* Nút lọc loại tài khoản */}
         <div className="flex items-center space-x-2" ref={popoverRef}>
           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <PopoverTrigger asChild>
@@ -143,15 +144,15 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
                     )}
                     onClick={() => toggleAccountType(type)}
                   >
-                    <span className={cn(
-                      "px-2 py-1 rounded-full text-xs font-medium", 
-                      getAccountTypeClass(type)
-                    )}>
+                    <span
+                      className={cn(
+                        "px-2 py-1 rounded-full text-xs font-medium",
+                        getAccountTypeClass(type)
+                      )}
+                    >
                       {type}
                     </span>
-                    {selectedAccountTypes.includes(type) && (
-                      <Check className="h-4 w-4" />
-                    )}
+                    {selectedAccountTypes.includes(type) && <Check className="h-4 w-4" />}
                   </div>
                 ))}
               </div>
@@ -159,108 +160,107 @@ const DataTable = ({ data, onSelectRow, selectedAccountId }: DataTableProps) => 
           </Popover>
         </div>
       </div>
-
-      <div className="rounded-lg border overflow-hidden">
-        <ScrollArea className="w-full">
-          <div className="min-w-[800px]">
-            <Table className="w-full table-fixed">
-              <TableHeader className="bg-gray-50 sticky top-0 z-10">
-                <TableRow>
-                  <TableHead className="font-medium text-xs sm:text-sm whitespace-nowrap w-[30%]">Tên công ty</TableHead>
-                  <TableHead 
-                    className={cn(
-                      "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap w-[15%]", 
-                      sortField === "valid_txn_cnt" && "header-cell-active"
-                    )}
-                    onClick={() => handleSort("valid_txn_cnt")}
-                  >
-                    Hiện tại {renderSortIcon("valid_txn_cnt")}
-                  </TableHead>
-                  <TableHead 
-                    className={cn(
-                      "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap w-[15%]", 
-                      sortField === "valid_txn_cnt_range_before" && "header-cell-active"
-                    )}
-                    onClick={() => handleSort("valid_txn_cnt_range_before")}
-                  >
-                    Trước {renderSortIcon("valid_txn_cnt_range_before")}
-                  </TableHead>
-                  <TableHead 
-                    className={cn(
-                      "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap w-[15%]", 
-                      sortField === "diff" && "header-cell-active"
-                    )}
-                    onClick={() => handleSort("diff")}
-                  >
-                    +/- {renderSortIcon("diff")}
-                  </TableHead>
-                  <TableHead 
-                    className={cn(
-                      "text-right header-cell font-medium text-xs sm:text-sm whitespace-nowrap w-[15%]", 
-                      sortField === "percentage" && "header-cell-active"
-                    )}
-                    onClick={() => handleSort("percentage")}
-                  >
-                    % {renderSortIcon("percentage")}
-                  </TableHead>
-                  <TableHead className="font-medium text-xs sm:text-sm whitespace-nowrap text-center w-[10%]">
-                    Loại
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedData.length > 0 ? (
-                  sortedData.map((account) => (
-                    <TableRow 
-                      key={account.account_id} 
-                      className={cn(
-                        "cursor-pointer hover:bg-gray-50",
-                        selectedAccountId === account.account_id && "bg-blue-50"
-                      )}
-                      onClick={() => onSelectRow(account)}
-                    >
-                      <TableCell className="font-medium text-xs sm:text-sm">{account.name}</TableCell>
-                      <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt)}</TableCell>
-                      <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt_range_before)}</TableCell>
-                      <TableCell 
-                        className={cn(
-                          "text-right font-medium text-xs sm:text-sm",
-                          account.diff > 0 ? "text-green-600" : account.diff < 0 ? "text-red-600" : ""
-                        )}
-                      >
-                        {formatTransactionCount(account.diff)}
-                      </TableCell>
-                      <TableCell 
-                        className={cn(
-                          "text-right font-medium text-xs sm:text-sm",
-                          account.percentage && account.percentage > 0 ? "text-green-600" : "text-red-600"
-                        )}
-                      >
-                        {formatPercentage(account.percentage || 0)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className={cn(
-                          "px-2 py-1 rounded-full text-xs font-medium", 
-                          getAccountTypeClass(account.account_type)
-                        )}>
-                          {account.account_type}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      Không có tài khoản nào phù hợp với bộ lọc.
-                    </TableCell>
-                  </TableRow>
+    </div>
+  
+    {/* Scrollable Table */}
+    <div className="overflow-y-auto flex-1">
+      <div className="min-w-[800px]">
+        <Table className="w-full table-fixed">
+          <TableHeader className="bg-gray-50 sticky top-0 z-10">
+            <TableRow>
+              <TableHead className="w-[30%] text-xs sm:text-sm font-medium whitespace-nowrap">Tên công ty</TableHead>
+              <TableHead
+                className={cn(
+                  "w-[15%] text-right font-medium text-xs sm:text-sm whitespace-nowrap",
+                  sortField === "valid_txn_cnt" && "header-cell-active"
                 )}
-              </TableBody>
-            </Table>
-          </div>
-        </ScrollArea>
+                onClick={() => handleSort("valid_txn_cnt")}
+              >
+                Hiện tại {renderSortIcon("valid_txn_cnt")}
+              </TableHead>
+              <TableHead
+                className={cn(
+                  "w-[15%] text-right font-medium text-xs sm:text-sm whitespace-nowrap",
+                  sortField === "valid_txn_cnt_range_before" && "header-cell-active"
+                )}
+                onClick={() => handleSort("valid_txn_cnt_range_before")}
+              >
+                Trước {renderSortIcon("valid_txn_cnt_range_before")}
+              </TableHead>
+              <TableHead
+                className={cn(
+                  "w-[15%] text-right font-medium text-xs sm:text-sm whitespace-nowrap",
+                  sortField === "diff" && "header-cell-active"
+                )}
+                onClick={() => handleSort("diff")}
+              >
+                +/- {renderSortIcon("diff")}
+              </TableHead>
+              <TableHead
+                className={cn(
+                  "w-[15%] text-right font-medium text-xs sm:text-sm whitespace-nowrap",
+                  sortField === "percentage" && "header-cell-active"
+                )}
+                onClick={() => handleSort("percentage")}
+              >
+                % {renderSortIcon("percentage")}
+              </TableHead>
+              <TableHead className="w-[10%] text-center font-medium text-xs sm:text-sm whitespace-nowrap">Loại</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedData.length > 0 ? (
+              sortedData.map((account) => (
+                <TableRow
+                  key={account.account_id}
+                  className={cn(
+                    "cursor-pointer hover:bg-gray-50",
+                    selectedAccountId === account.account_id && "bg-blue-50"
+                  )}
+                  onClick={() => onSelectRow(account)}
+                >
+                  <TableCell className="font-medium text-xs sm:text-sm">{account.name}</TableCell>
+                  <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt)}</TableCell>
+                  <TableCell className="text-right text-xs sm:text-sm">{formatTransactionCount(account.valid_txn_cnt_range_before)}</TableCell>
+                  <TableCell
+                    className={cn(
+                      "text-right font-medium text-xs sm:text-sm",
+                      account.diff > 0 ? "text-green-600" : account.diff < 0 ? "text-red-600" : ""
+                    )}
+                  >
+                    {formatTransactionCount(account.diff)}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "text-right font-medium text-xs sm:text-sm",
+                      account.percentage && account.percentage > 0 ? "text-green-600" : "text-red-600"
+                    )}
+                  >
+                    {formatPercentage(account.percentage || 0)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium",
+                      getAccountTypeClass(account.account_type)
+                    )}>
+                      {account.account_type}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Không có tài khoản nào phù hợp với bộ lọc.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
+  </div>
+  
   );
 };
 
