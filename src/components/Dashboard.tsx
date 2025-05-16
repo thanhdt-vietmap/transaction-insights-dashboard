@@ -75,7 +75,7 @@ const Dashboard = () => {
   return (<div className="w-[90%] mx-auto px-4 py-4 sm:py-6 lg:py-8">
     <div className="flex flex-col space-y-4 sm:space-y-6 lg:space-y-8">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">DASHBOARD</h1>
         <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
           Dữ liệu thống kê giao dịch từ {fromDate} đến {toDate}
         </p>
