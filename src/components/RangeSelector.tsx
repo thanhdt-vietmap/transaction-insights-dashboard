@@ -8,7 +8,7 @@ interface RangeSelectorProps {
 }
 
 const RangeSelector = ({ rangeCount, onChange }: RangeSelectorProps) => {
-  const options = [1, 3, 6, 12];
+  const options = [1, 2, 3, 4, 5, 6, 9, 12, 24];
   
   return (
     <div className="flex flex-wrap gap-2">
@@ -19,7 +19,7 @@ const RangeSelector = ({ rangeCount, onChange }: RangeSelectorProps) => {
           onClick={() => onChange(count)}
           className="flex-1"
         >
-          {count} {count === 1 ? 'tháng' : 'tháng'}
+          {count} {count === 1 ? 'khoảng' : 'khoảng'}
         </Button>
       ))}
     </div>

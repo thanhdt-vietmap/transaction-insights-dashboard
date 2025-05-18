@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { 
   Popover, 
   PopoverContent, 
@@ -58,6 +58,12 @@ const DateRangePicker = ({ fromDate, toDate, onDateChange }: DateRangePickerProp
     threeMonthsAgo.setMonth(today.getMonth() - 3);
     onDateChange(format(threeMonthsAgo, 'yyyy-MM-dd'), format(today, 'yyyy-MM-dd'));
   };
+  
+  const setFromMonthStart = () => {
+    const today = new Date();
+    const firstDayOfMonth = startOfMonth(today);
+    onDateChange(format(firstDayOfMonth, 'yyyy-MM-dd'), format(today, 'yyyy-MM-dd'));
+  };
 
   return (
     <div className="w-full flex flex-col space-y-2">
@@ -75,7 +81,7 @@ const DateRangePicker = ({ fromDate, toDate, onDateChange }: DateRangePickerProp
               selected={fromDate ? new Date(fromDate) : undefined}
               onSelect={handleFromDateChange}
               initialFocus
-              className={cn("p-3")}
+              className={cn("p-3 pointer-events-auto")}
             />
           </PopoverContent>
         </Popover>
@@ -95,7 +101,7 @@ const DateRangePicker = ({ fromDate, toDate, onDateChange }: DateRangePickerProp
               selected={toDate ? new Date(toDate) : undefined}
               onSelect={handleToDateChange}
               initialFocus
-              className={cn("p-3")}
+              className={cn("p-3 pointer-events-auto")}
             />
           </PopoverContent>
         </Popover>
@@ -110,6 +116,9 @@ const DateRangePicker = ({ fromDate, toDate, onDateChange }: DateRangePickerProp
         </Button>
         <Button variant="outline" size="sm" className="text-xs sm:text-sm h-8" onClick={setLastThreeMonths}>
           90 ngày
+        </Button>
+        <Button variant="outline" size="sm" className="text-xs sm:text-sm h-8" onClick={setFromMonthStart}>
+          Từ đầu tháng
         </Button>
       </div>
     </div>
