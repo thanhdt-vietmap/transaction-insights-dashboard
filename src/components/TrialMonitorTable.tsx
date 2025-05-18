@@ -43,6 +43,14 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
     return '';
   };
   
+  // Function to get bar color based on request count
+  const getBarColor = (count: number) => {
+    if (count > 10000) return '#f87171'; // red-400
+    if (count > 5000) return '#facc15'; // yellow-400
+    if (count > 1000) return '#4ade80'; // green-400
+    return '#8884d8'; // default purple
+  };
+  
   // Function to calculate account status
   const getAccountStatus = (account: TrialMonitorData): AccountStatus => {
     // For trial accounts with values in more than 3 ranges
@@ -100,10 +108,14 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
   const getChartData = () => {
     if (!selectedAccount) return [];
     
-    return selectedAccount.monthly_data.map(month => ({
-      name: month.month,
-      Transactions: month.valid_txn_cnt
-    }));
+    return selectedAccount.monthly_data.map(month => {
+      const txnCount = month.valid_txn_cnt;
+      return {
+        name: month.month,
+        Transactions: txnCount,
+        color: getBarColor(txnCount)
+      };
+    });
   };
 
   return (
@@ -176,7 +188,16 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="Transactions" fill="#8884d8" />
+                      <Bar 
+                        dataKey="Transactions" 
+                        fill="#8884d8" 
+                        // Use the color property from each data point
+                        isAnimationActive={true}
+                      >
+                        {getChartData().map((entry, index) => (
+                          <rect key={`rect-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -201,6 +222,30 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
                       {formatNumber(selectedAccount.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0))}
                     </p>
                   </div>
+                  
+                  {/* Display account metadata if available */}
+                  {selectedAccount.metadata && (
+                    <>
+                      {selectedAccount.metadata.contact_name && (
+                        <div>
+                          <h3 className="font-medium">Contact Name</h3>
+                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.contact_name}</p>
+                        </div>
+                      )}
+                      {selectedAccount.metadata.email && (
+                        <div>
+                          <h3 className="font-medium">Email</h3>
+                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.email}</p>
+                        </div>
+                      )}
+                      {selectedAccount.metadata.phone && (
+                        <div>
+                          <h3 className="font-medium">Phone</h3>
+                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.phone}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
