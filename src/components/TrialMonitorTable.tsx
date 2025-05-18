@@ -14,8 +14,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TrialMonitorData, MonthlyData } from "@/services/trialMonitorService";
 import { formatNumber } from "@/utils/formatters";
 import { AccountStatus } from "@/pages/TrialMonitor";
-import AccountDetailDialog from './AccountDetailDialog';
 import { Check, User, Star, CircleUser } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface TrialMonitorTableProps {
   data: TrialMonitorData[];
@@ -23,7 +34,6 @@ interface TrialMonitorTableProps {
 
 const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
   const [selectedAccount, setSelectedAccount] = useState<TrialMonitorData | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
   
   // Function to determine background color based on request count
   const getBgColor = (count: number) => {
@@ -84,7 +94,16 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
 
   const handleRowClick = (account: TrialMonitorData) => {
     setSelectedAccount(account);
-    setDetailOpen(true);
+  };
+
+  // Prepare chart data for the selected account
+  const getChartData = () => {
+    if (!selectedAccount) return [];
+    
+    return selectedAccount.monthly_data.map(month => ({
+      name: month.month,
+      Transactions: month.valid_txn_cnt
+    }));
   };
 
   return (
@@ -94,9 +113,9 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="whitespace-nowrap sticky left-0 z-20 bg-background">Tên tài khoản</TableHead>
-                <TableHead className="whitespace-nowrap">Loại tài khoản</TableHead>
-                <TableHead className="whitespace-nowrap">Trạng thái</TableHead>
+                <TableHead className="whitespace-nowrap sticky left-0 z-20 bg-background">Account Name</TableHead>
+                <TableHead className="whitespace-nowrap">Account Type</TableHead>
+                <TableHead className="whitespace-nowrap">Status</TableHead>
                 {data[0]?.monthly_data.map((month, index) => (
                   <TableHead key={index} className="whitespace-nowrap text-right">
                     {month.month}
@@ -111,7 +130,7 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
                 return (
                   <TableRow 
                     key={account.account_id}
-                    className="cursor-pointer hover:bg-muted"
+                    className={`cursor-pointer hover:bg-muted ${selectedAccount?.account_id === account.account_id ? 'bg-muted' : ''}`}
                     onClick={() => handleRowClick(account)}
                   >
                     <TableCell className="font-medium sticky left-0 bg-background z-10">{account.name}</TableCell>
@@ -134,11 +153,60 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
         </div>
       </ScrollArea>
       
-      <AccountDetailDialog 
-        account={selectedAccount} 
-        open={detailOpen} 
-        onOpenChange={setDetailOpen} 
-      />
+      {selectedAccount && (
+        <Card className="mt-6 animate-in fade-in duration-300">
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center">
+              <div>Account Details: {selectedAccount.name}</div>
+              <Button variant="outline" size="sm" onClick={() => setSelectedAccount(null)}>Close</Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="chart">
+              <TabsList className="mb-4">
+                <TabsTrigger value="chart">Transaction Chart</TabsTrigger>
+                <TabsTrigger value="info">Account Info</TabsTrigger>
+              </TabsList>
+              <TabsContent value="chart" className="pt-2">
+                <div className="h-[350px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={getChartData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Transactions" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </TabsContent>
+              <TabsContent value="info" className="pt-2">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Account ID</h3>
+                    <p className="text-sm text-muted-foreground">{selectedAccount.account_id}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Account Type</h3>
+                    <p className="text-sm text-muted-foreground">{selectedAccount.account_type}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Status</h3>
+                    <div className="mt-1">{renderStatusBadge(getAccountStatus(selectedAccount))}</div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Total Transactions</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {formatNumber(selectedAccount.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0))}
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
     </>
   );
 };

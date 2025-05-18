@@ -16,9 +16,9 @@ import { ChevronLeft } from "lucide-react";
 // Account status enum
 export enum AccountStatus {
   NORMAL = "Normal",
-  POTENTIAL = "Tiềm năng",
-  PARTNER = "Đối tác",
-  NEEDS_REVIEW = "Cần kiểm tra"
+  POTENTIAL = "Potential",
+  PARTNER = "Partner",
+  NEEDS_REVIEW = "Needs Review"
 }
 
 const TrialMonitor = () => {

@@ -19,7 +19,7 @@ const RangeSelector = ({ rangeCount, onChange }: RangeSelectorProps) => {
           onClick={() => onChange(count)}
           className="flex-1"
         >
-          {count} {count === 1 ? 'khoảng' : 'khoảng'}
+          {count}
         </Button>
       ))}
     </div>
