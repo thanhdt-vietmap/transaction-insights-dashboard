@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 import { AccountType } from "./dataService";
 import { format, subDays } from "date-fns";
@@ -18,7 +17,7 @@ export interface AccountMetadata {
   time_zone: string;
 }
 
-// New response type to match the updated API format
+// Updated response type to match the API format
 export interface RawTrialAccount {
   [key: string]: number | string | AccountMetadata | AccountType;
   account_id: string;
@@ -189,40 +188,38 @@ const calculateRangeDates = (fromDate: string, toDate: string, rangeCount: numbe
   return rangeDates;
 };
 
-// Transform API response to our format with the new structure
+// Transform API response to frontend format WITHOUT changing the data structure
 const transformApiResponse = (apiResponse: RawTrialAccount[], rangeCount: number, fromDate: string, toDate: string): TrialMonitorData[] => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const currentMonth = new Date().getMonth();
-  
-  // Get the labels for each range (last N months)
-  const rangeLabels = Array.from({ length: rangeCount }, (_, i) => {
-    const monthIndex = (currentMonth - i + 12) % 12;
-    return months[monthIndex];
-  }).reverse();
-  
   // Calculate dates for each range
   const rangeDates = calculateRangeDates(fromDate, toDate, rangeCount);
+  
+  // Range labels (simply "Range 1", "Range 2", etc.)
+  const rangeLabels = Array.from({ length: rangeCount }, (_, i) => `Range ${i + 1}`);
   
   // Convert the array of accounts to our TrialMonitorData format
   return apiResponse.map(account => {
     // Extract the numeric range keys (0, 1, 2, etc.)
-    const rangeData = Array.from({ length: rangeCount }, (_, i) => {
+    const monthlyData: MonthlyData[] = [];
+    
+    // Process ranges (0, 1, 2, etc.)
+    for (let i = 0; i < rangeCount; i++) {
       const rangeKey = i.toString();
-      const txnCount = typeof account[rangeKey] === 'number' ? account[rangeKey] as number : 0;
+      // Get the value from the account object using the range key (0, 1, 2)
+      const txnValue = typeof account[rangeKey] === 'number' ? account[rangeKey] as number : 0;
       
-      return {
-        month: `Range ${i + 1}`,
-        date: rangeDates[i] || format(new Date(), 'dd/MM/yyyy'),
-        valid_txn_cnt: txnCount
-      };
-    });
+      monthlyData.push({
+        month: rangeLabels[i],
+        valid_txn_cnt: txnValue,
+        date: rangeDates[i]
+      });
+    }
     
     return {
       account_id: account.account_id as string,
       name: account.name as string,
       account_type: account.account_type as AccountType,
       metadata: account.metadata as AccountMetadata,
-      monthly_data: rangeData
+      monthly_data: monthlyData
     };
   });
 };
@@ -257,7 +254,7 @@ export const fetchTrialMonitorData = async (
     const data: RawTrialAccount[] = await response.json();
     console.log(`Fetched trial monitor data with ${rangeCount} ranges:`, data);
     
-    // Transform the data to our format
+    // Transform the data to our format, but keep the original structure
     const transformedData = transformApiResponse(data, rangeCount, fromDate, toDate);
     
     // Filter accounts with no requests
