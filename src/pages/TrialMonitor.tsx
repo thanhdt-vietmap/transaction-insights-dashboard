@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchTrialMonitorData } from "@/services/trialMonitorService";
@@ -56,11 +55,13 @@ const TrialMonitor = () => {
   
   const handleFetchData = () => {
     setShouldFetch(true);
-    refetch().then(() => {
-      toast({
-        title: "Đã tải dữ liệu",
-        description: `Dữ liệu từ ngày ${fromDate} đến ngày ${toDate} với ${rangeCount} khoảng đã được cập nhật.`
-      });
+    refetch().then((result) => {
+      if (result.data) {
+        toast({
+          title: "Đã tải dữ liệu",
+          description: `Dữ liệu từ ${fromDate} đến ${toDate} với ${rangeCount} khoảng đã được cập nhật. Hiển thị ${result.data.length} tài khoản có giao dịch.`
+        });
+      }
     });
   };
 

@@ -15,18 +15,13 @@ export interface AccountMetadata {
   time_zone: string;
 }
 
-export interface RangeData {
+// New response type to match the updated API format
+export interface RawTrialAccount {
+  [key: string]: number | string | AccountMetadata | AccountType;
   account_id: string;
   name: string;
   metadata: AccountMetadata;
-  valid_txn_cnt: number;
   account_type: AccountType;
-}
-
-export interface RangeResponse {
-  [rangeIndex: string]: {
-    [accountId: string]: RangeData;
-  };
 }
 
 export interface TrialMonitorData {
@@ -161,8 +156,8 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
   });
 };
 
-// Transform API response to our format
-const transformApiResponse = (apiResponse: RangeResponse, rangeCount: number): TrialMonitorData[] => {
+// Transform API response to our format with the new structure
+const transformApiResponse = (apiResponse: RawTrialAccount[], rangeCount: number): TrialMonitorData[] => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonth = new Date().getMonth();
   
@@ -172,40 +167,35 @@ const transformApiResponse = (apiResponse: RangeResponse, rangeCount: number): T
     return months[monthIndex];
   }).reverse();
   
-  // Create a map of accounts and their data across all ranges
-  const accountsMap: Record<string, TrialMonitorData> = {};
-  
-  // Iterate through each range
-  for (let i = 0; i < rangeCount; i++) {
-    const rangeKey = i.toString();
-    const rangeData = apiResponse[rangeKey] || {};
+  // Convert the array of accounts to our TrialMonitorData format
+  return apiResponse.map(account => {
+    // Extract the numeric range keys (0, 1, 2, etc.)
+    const rangeData = Array.from({ length: rangeCount }, (_, i) => {
+      const rangeKey = i.toString();
+      const txnCount = typeof account[rangeKey] === 'number' ? account[rangeKey] as number : 0;
+      
+      return {
+        month: rangeLabels[i] || `Range ${i + 1}`,
+        valid_txn_cnt: txnCount
+      };
+    });
     
-    // For each account in this range
-    for (const accountId in rangeData) {
-      const accountData = rangeData[accountId];
-      
-      // Create or update the account in our map
-      if (!accountsMap[accountId]) {
-        accountsMap[accountId] = {
-          account_id: accountData.account_id,
-          name: accountData.name,
-          account_type: accountData.account_type,
-          metadata: accountData.metadata,
-          monthly_data: Array(rangeCount).fill(null).map((_, index) => ({
-            month: rangeLabels[index],
-            valid_txn_cnt: 0
-          }))
-        };
-      }
-      
-      // Update this range's data for the account
-      if (accountsMap[accountId].monthly_data[i]) {
-        accountsMap[accountId].monthly_data[i].valid_txn_cnt = accountData.valid_txn_cnt;
-      }
-    }
-  }
-  
-  return Object.values(accountsMap);
+    return {
+      account_id: account.account_id as string,
+      name: account.name as string,
+      account_type: account.account_type as AccountType,
+      metadata: account.metadata as AccountMetadata,
+      monthly_data: rangeData
+    };
+  });
+};
+
+// Filter accounts that have no requests across all ranges
+const filterAccountsWithNoRequests = (accounts: TrialMonitorData[]): TrialMonitorData[] => {
+  return accounts.filter(account => {
+    const totalRequests = account.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
+    return totalRequests > 0;
+  });
 };
 
 export const fetchTrialMonitorData = async (
@@ -214,19 +204,31 @@ export const fetchTrialMonitorData = async (
   rangeCount: number
 ): Promise<TrialMonitorData[]> => {
   try {
-    // In a real application, we would fetch from the actual API
+    // Format dates for the API if needed (API expects MM-DD-YYYY)
+    const formattedFromDate = formatDateForAPI(fromDate);
+    const formattedToDate = formatDateForAPI(toDate);
+    
+    // Fetch from the actual API with the new date parameters
     const response = await fetch(
-      `${API_URL}?account_type=TRIAL&numberOfRangeRequests=${rangeCount}`
+      `${API_URL}?account_type=TRIAL&numberOfRangeRequests=${rangeCount}&fromDate=${formattedFromDate}&toDate=${formattedToDate}`
     );
     
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
     }
     
-    const data: RangeResponse = await response.json();
-    console.log(`Fetching trial monitor data with ${rangeCount} ranges`, data);
+    const data: RawTrialAccount[] = await response.json();
+    console.log(`Fetched trial monitor data with ${rangeCount} ranges:`, data);
     
-    return transformApiResponse(data, rangeCount);
+    // Transform the data to our format
+    const transformedData = transformApiResponse(data, rangeCount);
+    
+    // Filter accounts with no requests
+    const filteredData = filterAccountsWithNoRequests(transformedData);
+    
+    console.log(`Filtered data (${filteredData.length} accounts with requests):`, filteredData);
+    
+    return filteredData;
   } catch (error) {
     console.error("Failed to fetch trial monitor data:", error);
     toast({
@@ -236,6 +238,23 @@ export const fetchTrialMonitorData = async (
     });
     
     // Return sample data for development/preview
-    return generateSampleData(rangeCount);
+    const sampleData = generateSampleData(rangeCount);
+    
+    // Filter the sample data too for consistency
+    return filterAccountsWithNoRequests(sampleData);
+  }
+};
+
+// Helper function to format date from YYYY-MM-DD to MM-DD-YYYY for the API
+const formatDateForAPI = (dateString: string): string => {
+  try {
+    const [year, month, day] = dateString.split('-');
+    if (year && month && day) {
+      return `${month}-${day}-${year}`;
+    }
+    return dateString;
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateString;
   }
 };
