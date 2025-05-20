@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 import { AccountType } from "./dataService";
 import { format, subDays } from "date-fns";
@@ -46,6 +47,12 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
     const monthIndex = (currentMonth - i + 12) % 12;
     return months[monthIndex];
   }).reverse();
+  
+  // Generate sample dates for each range
+  const rangeDates = Array.from({ length: rangeCount }, (_, i) => {
+    const date = subDays(new Date(), i * 30);
+    return format(date, 'dd/MM/yyyy');
+  });
   
   const accounts = [
     {
@@ -130,7 +137,7 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
   
   return accounts.map(account => {
     // Generate monthly data for each account
-    const monthlyData = selectedMonths.map(month => {
+    const monthlyData = selectedMonths.map((month, index) => {
       let value = 0;
       
       // For TRIAL accounts, randomly have some months with zero transactions
@@ -147,7 +154,8 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
       
       return {
         month,
-        valid_txn_cnt: value
+        valid_txn_cnt: value,
+        date: rangeDates[index] || format(new Date(), 'dd/MM/yyyy') // Add date property
       };
     });
     
