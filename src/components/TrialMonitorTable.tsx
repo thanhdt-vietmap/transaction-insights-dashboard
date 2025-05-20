@@ -14,9 +14,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TrialMonitorData, MonthlyData } from "@/services/trialMonitorService";
 import { formatNumber } from "@/utils/formatters";
 import { AccountStatus } from "@/pages/TrialMonitor";
-import { Check, User, Star, CircleUser } from 'lucide-react';
+import { Check, User, Star, CircleUser, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -30,10 +31,23 @@ import {
 
 interface TrialMonitorTableProps {
   data: TrialMonitorData[];
+  searchTerm: string;
+  selectedStatuses: AccountStatus[];
+  selectedAccountTypes: string[];
 }
 
-const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
+type SortField = 'name' | 'account_type' | 'total_txn' | 'status';
+type SortDirection = 'asc' | 'desc';
+
+const TrialMonitorTable = ({ 
+  data, 
+  searchTerm, 
+  selectedStatuses, 
+  selectedAccountTypes 
+}: TrialMonitorTableProps) => {
   const [selectedAccount, setSelectedAccount] = useState<TrialMonitorData | null>(null);
+  const [sortField, setSortField] = useState<SortField>('total_txn');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   
   // Function to determine background color based on request count
   const getBgColor = (count: number) => {
@@ -118,6 +132,72 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
     });
   };
 
+  // Handle sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  // Filter and sort data
+  const filteredData = data.filter(account => {
+    const accountStatus = getAccountStatus(account);
+    const matchesSearch = searchTerm === '' || 
+      account.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatuses.length === 0 || 
+      selectedStatuses.includes(accountStatus);
+    const matchesAccountType = selectedAccountTypes.length === 0 || 
+      selectedAccountTypes.includes(account.account_type);
+      
+    return matchesSearch && matchesStatus && matchesAccountType;
+  });
+
+  // Sort the filtered data
+  const sortedData = [...filteredData].sort((a, b) => {
+    let valueA: string | number;
+    let valueB: string | number;
+    
+    switch (sortField) {
+      case 'name':
+        valueA = a.name;
+        valueB = b.name;
+        break;
+      case 'account_type':
+        valueA = a.account_type;
+        valueB = b.account_type;
+        break;
+      case 'status':
+        valueA = getAccountStatus(a);
+        valueB = getAccountStatus(b);
+        break;
+      case 'total_txn':
+      default:
+        valueA = a.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
+        valueB = b.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
+    }
+    
+    if (typeof valueA === 'string' && typeof valueB === 'string') {
+      return sortDirection === 'asc'
+        ? valueA.localeCompare(valueB)
+        : valueB.localeCompare(valueA);
+    }
+    
+    return sortDirection === 'asc'
+      ? (valueA as number) - (valueB as number)
+      : (valueB as number) - (valueA as number);
+  });
+
+  // Render sort indicator
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="ml-1 h-3 w-3 inline" />
+      : <ArrowDown className="ml-1 h-3 w-3 inline" />;
+  };
+
   return (
     <>
       <ScrollArea className="w-full overflow-auto">
@@ -125,10 +205,25 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="whitespace-nowrap sticky left-0 z-20 bg-background">Account Name</TableHead>
-                <TableHead className="whitespace-nowrap">Account Type</TableHead>
-                <TableHead className="whitespace-nowrap">Status</TableHead>
-                {data[0]?.monthly_data.map((month, index) => (
+                <TableHead 
+                  className="whitespace-nowrap sticky left-0 z-20 bg-background cursor-pointer"
+                  onClick={() => handleSort('name')}
+                >
+                  Account Name {renderSortIcon('name')}
+                </TableHead>
+                <TableHead 
+                  className="whitespace-nowrap cursor-pointer"
+                  onClick={() => handleSort('account_type')}
+                >
+                  Account Type {renderSortIcon('account_type')}
+                </TableHead>
+                <TableHead 
+                  className="whitespace-nowrap cursor-pointer"
+                  onClick={() => handleSort('status')}
+                >
+                  Status {renderSortIcon('status')}
+                </TableHead>
+                {sortedData.length > 0 && sortedData[0].monthly_data.map((month, index) => (
                   <TableHead key={index} className="whitespace-nowrap text-right">
                     {month.month}
                   </TableHead>
@@ -136,30 +231,38 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((account) => {
-                const status = getAccountStatus(account);
-                
-                return (
-                  <TableRow 
-                    key={account.account_id}
-                    className={`cursor-pointer hover:bg-muted ${selectedAccount?.account_id === account.account_id ? 'bg-muted' : ''}`}
-                    onClick={() => handleRowClick(account)}
-                  >
-                    <TableCell className="font-medium sticky left-0 bg-background z-10">{account.name}</TableCell>
-                    <TableCell>{account.account_type}</TableCell>
-                    <TableCell>{renderStatusBadge(status)}</TableCell>
-                    
-                    {account.monthly_data.map((month, index) => (
-                      <TableCell 
-                        key={index} 
-                        className={`text-right ${getBgColor(month.valid_txn_cnt)}`}
-                      >
-                        {formatNumber(month.valid_txn_cnt)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })}
+              {sortedData.length > 0 ? (
+                sortedData.map((account) => {
+                  const status = getAccountStatus(account);
+                  
+                  return (
+                    <TableRow 
+                      key={account.account_id}
+                      className={`cursor-pointer hover:bg-muted ${selectedAccount?.account_id === account.account_id ? 'bg-muted' : ''}`}
+                      onClick={() => handleRowClick(account)}
+                    >
+                      <TableCell className="font-medium sticky left-0 bg-background z-10">{account.name}</TableCell>
+                      <TableCell>{account.account_type}</TableCell>
+                      <TableCell>{renderStatusBadge(status)}</TableCell>
+                      
+                      {account.monthly_data.map((month, index) => (
+                        <TableCell 
+                          key={index} 
+                          className={`text-right ${getBgColor(month.valid_txn_cnt)}`}
+                        >
+                          {formatNumber(month.valid_txn_cnt)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3 + (data[0]?.monthly_data.length || 0)} className="h-24 text-center">
+                    Không có dữ liệu phù hợp với bộ lọc.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
@@ -191,7 +294,6 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
                       <Bar 
                         dataKey="Transactions" 
                         fill="#8884d8" 
-                        // Use the color property from each data point
                         isAnimationActive={true}
                       >
                         {getChartData().map((entry, index) => (

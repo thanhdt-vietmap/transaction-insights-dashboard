@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchTrialMonitorData } from "@/services/trialMonitorService";
@@ -5,12 +6,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 import DateRangePicker from "@/components/DateRangePicker";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search, Filter } from "lucide-react";
 import TrialMonitorTable from "@/components/TrialMonitorTable";
 import RangeSelector from "@/components/RangeSelector";
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 // Account status enum
 export enum AccountStatus {
@@ -19,6 +29,9 @@ export enum AccountStatus {
   PARTNER = "Partner",
   NEEDS_REVIEW = "Needs Review"
 }
+
+// Account types from dataService
+export type AccountType = "TRIAL" | "STANDARD" | "ENTERPRISE" | "INTERNAL" | "ALL";
 
 const TrialMonitor = () => {
   // Set default date range to last month
@@ -30,6 +43,11 @@ const TrialMonitor = () => {
   const [toDate, setToDate] = useState(today.toISOString().split('T')[0]);
   const [rangeCount, setRangeCount] = useState(3); // Default number of ranges to check
   const [shouldFetch, setShouldFetch] = useState(false);
+  
+  // New state for filtering and searching
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<AccountStatus[]>([]);
+  const [selectedAccountTypes, setSelectedAccountTypes] = useState<AccountType[]>(["TRIAL"]);
   
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["trialMonitorData", fromDate, toDate, rangeCount],
@@ -63,6 +81,24 @@ const TrialMonitor = () => {
         });
       }
     });
+  };
+
+  // Handle status selection toggle
+  const handleStatusChange = (status: AccountStatus) => {
+    setSelectedStatuses(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  // Handle account type selection toggle
+  const handleAccountTypeChange = (type: AccountType) => {
+    setSelectedAccountTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
   };
 
   if (error) {
@@ -158,7 +194,57 @@ const TrialMonitor = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg sm:text-xl">Theo dõi tài khoản Trial</CardTitle>
+                <CardTitle className="text-lg sm:text-xl flex items-center justify-between">
+                  <div>Theo dõi tài khoản Trial</div>
+                  <div className="flex items-center gap-2">
+                    {/* Search Box */}
+                    <div className="relative w-64">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Tìm kiếm theo tên"
+                        className="pl-8"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Status Filter Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Filter className="h-4 w-4" />
+                          Bộ lọc
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Trạng thái</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {Object.values(AccountStatus).map((status) => (
+                          <DropdownMenuCheckboxItem
+                            key={status}
+                            checked={selectedStatuses.includes(status)}
+                            onCheckedChange={() => handleStatusChange(status)}
+                          >
+                            {status}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                        
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Loại tài khoản</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {["TRIAL", "STANDARD", "ENTERPRISE", "INTERNAL"].map((type) => (
+                          <DropdownMenuCheckboxItem
+                            key={type}
+                            checked={selectedAccountTypes.includes(type as AccountType)}
+                            onCheckedChange={() => handleAccountTypeChange(type as AccountType)}
+                          >
+                            {type}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardTitle>
                 <CardDescription>Thông tin giao dịch tài khoản theo thời gian</CardDescription>
               </CardHeader>
               <CardContent>
@@ -169,7 +255,12 @@ const TrialMonitor = () => {
                     ))}
                   </div>
                 ) : data ? (
-                  <TrialMonitorTable data={data} />
+                  <TrialMonitorTable 
+                    data={data} 
+                    searchTerm={searchTerm}
+                    selectedStatuses={selectedStatuses}
+                    selectedAccountTypes={selectedAccountTypes}
+                  />
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     Nhấn "Tải dữ liệu" để xem danh sách tài khoản
