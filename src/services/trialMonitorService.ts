@@ -1,9 +1,11 @@
 import { toast } from "@/components/ui/use-toast";
 import { AccountType } from "./dataService";
+import { format, subDays } from "date-fns";
 
 export interface MonthlyData {
   month: string;
   valid_txn_cnt: number;
+  date: string; // Added date field
 }
 
 export interface AccountMetadata {
@@ -156,8 +158,31 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
   });
 };
 
+// Calculate dates for each range based on toDate and range size
+const calculateRangeDates = (fromDate: string, toDate: string, rangeCount: number): string[] => {
+  // Parse the end date (toDate)
+  const endDate = new Date(toDate.split('-').reverse().join('-'));
+  
+  // Calculate the total days between fromDate and toDate
+  const startDate = new Date(fromDate.split('-').reverse().join('-'));
+  const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Calculate the size of each range in days
+  const rangeSize = Math.ceil(totalDays / rangeCount);
+  
+  // Generate the date for each range
+  const rangeDates: string[] = [];
+  for (let i = 0; i < rangeCount; i++) {
+    const daysToSubtract = i * rangeSize;
+    const rangeDate = subDays(endDate, daysToSubtract);
+    rangeDates.push(format(rangeDate, 'dd/MM/yyyy'));
+  }
+  
+  return rangeDates;
+};
+
 // Transform API response to our format with the new structure
-const transformApiResponse = (apiResponse: RawTrialAccount[], rangeCount: number): TrialMonitorData[] => {
+const transformApiResponse = (apiResponse: RawTrialAccount[], rangeCount: number, fromDate: string, toDate: string): TrialMonitorData[] => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonth = new Date().getMonth();
   
@@ -167,6 +192,9 @@ const transformApiResponse = (apiResponse: RawTrialAccount[], rangeCount: number
     return months[monthIndex];
   }).reverse();
   
+  // Calculate dates for each range
+  const rangeDates = calculateRangeDates(fromDate, toDate, rangeCount);
+  
   // Convert the array of accounts to our TrialMonitorData format
   return apiResponse.map(account => {
     // Extract the numeric range keys (0, 1, 2, etc.)
@@ -175,7 +203,8 @@ const transformApiResponse = (apiResponse: RawTrialAccount[], rangeCount: number
       const txnCount = typeof account[rangeKey] === 'number' ? account[rangeKey] as number : 0;
       
       return {
-        month: rangeLabels[i] || `Range ${i + 1}`,
+        month: `Range ${i + 1}`,
+        date: rangeDates[i] || format(new Date(), 'dd/MM/yyyy'),
         valid_txn_cnt: txnCount
       };
     });
@@ -221,7 +250,7 @@ export const fetchTrialMonitorData = async (
     console.log(`Fetched trial monitor data with ${rangeCount} ranges:`, data);
     
     // Transform the data to our format
-    const transformedData = transformApiResponse(data, rangeCount);
+    const transformedData = transformApiResponse(data, rangeCount, fromDate, toDate);
     
     // Filter accounts with no requests
     const filteredData = filterAccountsWithNoRequests(transformedData);
