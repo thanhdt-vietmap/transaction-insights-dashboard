@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 import { AccountType } from "./dataService";
 
@@ -8,9 +7,26 @@ export interface MonthlyData {
 }
 
 export interface AccountMetadata {
-  contact_name?: string;
-  email?: string;
-  phone?: string;
+  contact: {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+  };
+  time_zone: string;
+}
+
+export interface RangeData {
+  account_id: string;
+  name: string;
+  metadata: AccountMetadata;
+  valid_txn_cnt: number;
+  account_type: AccountType;
+}
+
+export interface RangeResponse {
+  [rangeIndex: string]: {
+    [accountId: string]: RangeData;
+  };
 }
 
 export interface TrialMonitorData {
@@ -21,7 +37,7 @@ export interface TrialMonitorData {
   metadata?: AccountMetadata;
 }
 
-const API_URL = "http://192.168.22.151:3000/api/trial-monitor";
+const API_URL = "http://192.168.23.239:3000/api/get-trial-req";
 
 // Sample data for development/preview
 const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
@@ -40,9 +56,12 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
       name: "CÔNG TY CỔ PHẦN XE KHÁCH PHƯƠNG TRANG - FUTA BUS LINES",
       account_type: "TRIAL" as AccountType,
       metadata: {
-        contact_name: "Nguyễn Văn A",
-        email: "nguyenvana@futalines.vn",
-        phone: "0901234567"
+        contact: {
+          name: "Nguyễn Văn A",
+          email: "nguyenvana@futalines.vn",
+          phone: "0901234567"
+        },
+        time_zone: "GMT+7"
       }
     },
     {
@@ -50,9 +69,12 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
       name: "VPBANK - NGÂN HÀNG TMCP VIỆT NAM THỊNH VƯỢNG",
       account_type: "ENTERPRISE" as AccountType,
       metadata: {
-        contact_name: "Lê Thị B",
-        email: "lethi.b@vpbank.com.vn",
-        phone: "0912345678"
+        contact: {
+          name: "Lê Thị B",
+          email: "lethi.b@vpbank.com.vn",
+          phone: "0912345678"
+        },
+        time_zone: "GMT+7"
       }
     },
     {
@@ -60,9 +82,12 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
       name: "TECHCOMBANK - NGÂN HÀNG TMCP KỸ THƯƠNG VIỆT NAM",
       account_type: "STANDARD" as AccountType,
       metadata: {
-        contact_name: "Trần Văn C",
-        email: "tranvanc@techcombank.com.vn",
-        phone: "0923456789"
+        contact: {
+          name: "Trần Văn C",
+          email: "tranvanc@techcombank.com.vn",
+          phone: "0923456789"
+        },
+        time_zone: "GMT+7"
       }
     },
     {
@@ -70,9 +95,12 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
       name: "VIETCOMBANK - NGÂN HÀNG TMCP NGOẠI THƯƠNG VIỆT NAM",
       account_type: "ENTERPRISE" as AccountType,
       metadata: {
-        contact_name: "Phạm Thị D",
-        email: "phamthid@vietcombank.com.vn",
-        phone: "0934567890"
+        contact: {
+          name: "Phạm Thị D",
+          email: "phamthid@vietcombank.com.vn",
+          phone: "0934567890"
+        },
+        time_zone: "GMT+7"
       }
     },
     {
@@ -80,9 +108,12 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
       name: "AGRIBANK - NGÂN HÀNG NÔNG NGHIỆP VÀ PHÁT TRIỂN NÔNG THÔN VIỆT NAM",
       account_type: "INTERNAL" as AccountType,
       metadata: {
-        contact_name: "Hoàng Văn E",
-        email: "hoangvane@agribank.com.vn",
-        phone: "0945678901"
+        contact: {
+          name: "Hoàng Văn E",
+          email: "hoangvane@agribank.com.vn",
+          phone: "0945678901"
+        },
+        time_zone: "GMT+7"
       }
     },
     {
@@ -90,9 +121,12 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
       name: "BIDV - NGÂN HÀNG ĐẦU TƯ VÀ PHÁT TRIỂN VIỆT NAM",
       account_type: "TRIAL" as AccountType,
       metadata: {
-        contact_name: "Võ Thị F",
-        email: "vothif@bidv.com.vn",
-        phone: "0956789012"
+        contact: {
+          name: "Võ Thị F",
+          email: "vothif@bidv.com.vn",
+          phone: "0956789012"
+        },
+        time_zone: "GMT+7"
       }
     },
   ];
@@ -127,6 +161,53 @@ const generateSampleData = (rangeCount: number): TrialMonitorData[] => {
   });
 };
 
+// Transform API response to our format
+const transformApiResponse = (apiResponse: RangeResponse, rangeCount: number): TrialMonitorData[] => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentMonth = new Date().getMonth();
+  
+  // Get the labels for each range (last N months)
+  const rangeLabels = Array.from({ length: rangeCount }, (_, i) => {
+    const monthIndex = (currentMonth - i + 12) % 12;
+    return months[monthIndex];
+  }).reverse();
+  
+  // Create a map of accounts and their data across all ranges
+  const accountsMap: Record<string, TrialMonitorData> = {};
+  
+  // Iterate through each range
+  for (let i = 0; i < rangeCount; i++) {
+    const rangeKey = i.toString();
+    const rangeData = apiResponse[rangeKey] || {};
+    
+    // For each account in this range
+    for (const accountId in rangeData) {
+      const accountData = rangeData[accountId];
+      
+      // Create or update the account in our map
+      if (!accountsMap[accountId]) {
+        accountsMap[accountId] = {
+          account_id: accountData.account_id,
+          name: accountData.name,
+          account_type: accountData.account_type,
+          metadata: accountData.metadata,
+          monthly_data: Array(rangeCount).fill(null).map((_, index) => ({
+            month: rangeLabels[index],
+            valid_txn_cnt: 0
+          }))
+        };
+      }
+      
+      // Update this range's data for the account
+      if (accountsMap[accountId].monthly_data[i]) {
+        accountsMap[accountId].monthly_data[i].valid_txn_cnt = accountData.valid_txn_cnt;
+      }
+    }
+  }
+  
+  return Object.values(accountsMap);
+};
+
 export const fetchTrialMonitorData = async (
   fromDate: string,
   toDate: string,
@@ -135,13 +216,17 @@ export const fetchTrialMonitorData = async (
   try {
     // In a real application, we would fetch from the actual API
     const response = await fetch(
-      `${API_URL}?fromDate=${fromDate}&toDate=${toDate}&rangeCount=${rangeCount}`
+      `${API_URL}?account_type=TRIAL&numberOfRangeRequests=${rangeCount}`
     );
     
-    let data = await response.json();
-    console.log(`Fetching trial monitor data from ${fromDate} to ${toDate} with ${rangeCount} ranges`);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
     
-    return data;
+    const data: RangeResponse = await response.json();
+    console.log(`Fetching trial monitor data with ${rangeCount} ranges`, data);
+    
+    return transformApiResponse(data, rangeCount);
   } catch (error) {
     console.error("Failed to fetch trial monitor data:", error);
     toast({
