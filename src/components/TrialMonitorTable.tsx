@@ -226,22 +226,22 @@ const TrialMonitorTable = ({ data }: TrialMonitorTableProps) => {
                   {/* Display account metadata if available */}
                   {selectedAccount.metadata && (
                     <>
-                      {selectedAccount.metadata.contact_name && (
+                      {selectedAccount.metadata.contact && selectedAccount.metadata.contact.name && (
                         <div>
                           <h3 className="font-medium">Contact Name</h3>
-                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.contact_name}</p>
+                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.contact.name}</p>
                         </div>
                       )}
-                      {selectedAccount.metadata.email && (
+                      {selectedAccount.metadata.contact && selectedAccount.metadata.contact.email && (
                         <div>
                           <h3 className="font-medium">Email</h3>
-                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.email}</p>
+                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.contact.email}</p>
                         </div>
                       )}
-                      {selectedAccount.metadata.phone && (
+                      {selectedAccount.metadata.contact && selectedAccount.metadata.contact.phone && (
                         <div>
                           <h3 className="font-medium">Phone</h3>
-                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.phone}</p>
+                          <p className="text-sm text-muted-foreground">{selectedAccount.metadata.contact.phone}</p>
                         </div>
                       )}
                     </>
