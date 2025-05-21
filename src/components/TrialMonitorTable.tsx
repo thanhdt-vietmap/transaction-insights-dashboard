@@ -32,6 +32,7 @@ import {
 interface TrialMonitorTableProps {
   data: TrialMonitorData[];
   searchTerm: string;
+  ranges: {string: Date}[];
   selectedStatuses: AccountStatus[];
   selectedAccountTypes: string[];
 }
@@ -41,6 +42,7 @@ type SortDirection = 'asc' | 'desc';
 
 const TrialMonitorTable = ({ 
   data, 
+  ranges,
   searchTerm, 
   selectedStatuses, 
   selectedAccountTypes 
@@ -121,7 +123,6 @@ const TrialMonitorTable = ({
   // Prepare chart data for the selected account
   const getChartData = () => {
     if (!selectedAccount) return [];
-    
     return selectedAccount.monthly_data.map(month => {
       const txnCount = month.valid_txn_cnt;
       return {
