@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchTrialMonitorData } from "@/services/trialMonitorService";
@@ -27,7 +28,7 @@ export enum AccountStatus {
   NORMAL = "Normal",
   POTENTIAL = "Potential",
   PARTNER = "Partner",
-  NEEDS_REVIEW = "Needs Review"
+  NEEDS_REVIEW = "Review"
 }
 
 // Account types from dataService
@@ -256,7 +257,8 @@ const TrialMonitor = () => {
                   </div>
                 ) : data ? (
                   <TrialMonitorTable 
-                    data={data} 
+                    data={data.filteredData}
+                    ranges={data.ranges} 
                     searchTerm={searchTerm}
                     selectedStatuses={selectedStatuses}
                     selectedAccountTypes={selectedAccountTypes}

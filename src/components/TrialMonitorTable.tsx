@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Table, 
@@ -31,15 +32,17 @@ import {
 interface TrialMonitorTableProps {
   data: TrialMonitorData[];
   searchTerm: string;
+  ranges: {string: Date}[];
   selectedStatuses: AccountStatus[];
   selectedAccountTypes: string[];
 }
 
-type SortField = 'name' | 'account_type' | 'total_txn' | 'status' | number;
+type SortField = 'name' | 'account_type' | 'total_txn' | 'status';
 type SortDirection = 'asc' | 'desc';
 
 const TrialMonitorTable = ({ 
   data, 
+  ranges,
   searchTerm, 
   selectedStatuses, 
   selectedAccountTypes 
@@ -120,12 +123,10 @@ const TrialMonitorTable = ({
   // Prepare chart data for the selected account
   const getChartData = () => {
     if (!selectedAccount) return [];
-    
     return selectedAccount.monthly_data.map(month => {
       const txnCount = month.valid_txn_cnt;
       return {
         name: month.month,
-        date: month.date,
         Transactions: txnCount,
         color: getBarColor(txnCount)
       };
@@ -145,20 +146,8 @@ const TrialMonitorTable = ({
   // Filter and sort data
   const filteredData = data.filter(account => {
     const accountStatus = getAccountStatus(account);
-    
-    // Improved search that removes special characters and diacritics
-    const normalizeText = (text: string) => {
-      return text.toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^\w\s]/g, "");
-    };
-    
-    const normalizedSearch = normalizeText(searchTerm);
-    const normalizedName = normalizeText(account.name);
-    
-    const matchesSearch = searchTerm === '' || normalizedName.includes(normalizedSearch);
-    
+    const matchesSearch = searchTerm === '' || 
+      account.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatuses.length === 0 || 
       selectedStatuses.includes(accountStatus);
     const matchesAccountType = selectedAccountTypes.length === 0 || 
@@ -172,30 +161,23 @@ const TrialMonitorTable = ({
     let valueA: string | number;
     let valueB: string | number;
     
-    // If sorting by a numeric range column (0, 1, 2, etc.)
-    if (typeof sortField === 'number') {
-      valueA = a.monthly_data[sortField]?.valid_txn_cnt || 0;
-      valueB = b.monthly_data[sortField]?.valid_txn_cnt || 0;
-    } else {
-      // Existing sorting logic
-      switch (sortField) {
-        case 'name':
-          valueA = a.name;
-          valueB = b.name;
-          break;
-        case 'account_type':
-          valueA = a.account_type;
-          valueB = b.account_type;
-          break;
-        case 'status':
-          valueA = getAccountStatus(a);
-          valueB = getAccountStatus(b);
-          break;
-        case 'total_txn':
-        default:
-          valueA = a.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
-          valueB = b.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
-      }
+    switch (sortField) {
+      case 'name':
+        valueA = a.name;
+        valueB = b.name;
+        break;
+      case 'account_type':
+        valueA = a.account_type;
+        valueB = b.account_type;
+        break;
+      case 'status':
+        valueA = getAccountStatus(a);
+        valueB = getAccountStatus(b);
+        break;
+      case 'total_txn':
+      default:
+        valueA = a.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
+        valueB = b.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
     }
     
     if (typeof valueA === 'string' && typeof valueB === 'string') {
@@ -243,14 +225,8 @@ const TrialMonitorTable = ({
                   Status {renderSortIcon('status')}
                 </TableHead>
                 {sortedData.length > 0 && sortedData[0].monthly_data.map((month, index) => (
-                  <TableHead 
-                    key={index} 
-                    className="whitespace-nowrap text-right cursor-pointer"
-                    onClick={() => handleSort(index)}
-                  >
+                  <TableHead key={index} className="whitespace-nowrap text-right">
                     {month.month}
-                    <div className="text-xs text-muted-foreground">{month.date}</div>
-                    {renderSortIcon(index)}
                   </TableHead>
                 ))}
               </TableRow>
@@ -314,10 +290,7 @@ const TrialMonitorTable = ({
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip labelFormatter={(name) => {
-                        const item = getChartData().find(item => item.name === name);
-                        return `${name} - ${item?.date || ''}`;
-                      }} />
+                      <Tooltip />
                       <Legend />
                       <Bar 
                         dataKey="Transactions" 
