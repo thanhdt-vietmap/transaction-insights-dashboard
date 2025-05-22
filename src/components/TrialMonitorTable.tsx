@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ import {
 interface TrialMonitorTableProps {
   data: TrialMonitorData[];
   searchTerm: string;
-  ranges: {string: Date}[];
+  ranges: { string: Date }[];
   selectedStatuses: AccountStatus[];
   selectedAccountTypes: string[];
 }
@@ -40,17 +40,17 @@ interface TrialMonitorTableProps {
 type SortField = 'name' | 'account_type' | 'total_txn' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-const TrialMonitorTable = ({ 
-  data, 
+const TrialMonitorTable = ({
+  data,
   ranges,
-  searchTerm, 
-  selectedStatuses, 
-  selectedAccountTypes 
+  searchTerm,
+  selectedStatuses,
+  selectedAccountTypes
 }: TrialMonitorTableProps) => {
   const [selectedAccount, setSelectedAccount] = useState<TrialMonitorData | null>(null);
   const [sortField, setSortField] = useState<SortField>('total_txn');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  
+
   // Function to determine background color based on request count
   const getBgColor = (count: number) => {
     if (count > 10000) return 'bg-red-100';
@@ -58,7 +58,7 @@ const TrialMonitorTable = ({
     if (count > 1000) return 'bg-green-100';
     return '';
   };
-  
+
   // Function to get bar color based on request count
   const getBarColor = (count: number) => {
     if (count > 10000) return '#f87171'; // red-400
@@ -66,7 +66,7 @@ const TrialMonitorTable = ({
     if (count > 1000) return '#4ade80'; // green-400
     return '#8884d8'; // default purple
   };
-  
+
   // Function to calculate account status
   const getAccountStatus = (account: TrialMonitorData): AccountStatus => {
     // For trial accounts with values in more than 3 ranges
@@ -76,20 +76,20 @@ const TrialMonitorTable = ({
         return AccountStatus.NEEDS_REVIEW;
       }
     }
-    
+
     // For other account types, assign based on transaction volume
     const totalVolume = account.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
-    
+
     if (totalVolume > 200000000) return AccountStatus.PARTNER;
     if (totalVolume > 50000000) return AccountStatus.POTENTIAL;
     return AccountStatus.NORMAL;
   };
-  
+
   // Function to render status badge
   const renderStatusBadge = (status: AccountStatus) => {
     let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
     let Icon = CircleUser;
-    
+
     switch (status) {
       case AccountStatus.PARTNER:
         variant = "default";
@@ -107,7 +107,7 @@ const TrialMonitorTable = ({
         variant = "outline";
         Icon = CircleUser;
     }
-    
+
     return (
       <Badge variant={variant} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
@@ -146,13 +146,13 @@ const TrialMonitorTable = ({
   // Filter and sort data
   const filteredData = data.filter(account => {
     const accountStatus = getAccountStatus(account);
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       account.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatuses.length === 0 || 
+    const matchesStatus = selectedStatuses.length === 0 ||
       selectedStatuses.includes(accountStatus);
-    const matchesAccountType = selectedAccountTypes.length === 0 || 
+    const matchesAccountType = selectedAccountTypes.length === 0 ||
       selectedAccountTypes.includes(account.account_type);
-      
+
     return matchesSearch && matchesStatus && matchesAccountType;
   });
 
@@ -160,7 +160,7 @@ const TrialMonitorTable = ({
   const sortedData = [...filteredData].sort((a, b) => {
     let valueA: string | number;
     let valueB: string | number;
-    
+
     switch (sortField) {
       case 'name':
         valueA = a.name;
@@ -179,13 +179,13 @@ const TrialMonitorTable = ({
         valueA = a.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
         valueB = b.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0);
     }
-    
+
     if (typeof valueA === 'string' && typeof valueB === 'string') {
       return sortDirection === 'asc'
         ? valueA.localeCompare(valueB)
         : valueB.localeCompare(valueA);
     }
-    
+
     return sortDirection === 'asc'
       ? (valueA as number) - (valueB as number)
       : (valueB as number) - (valueA as number);
@@ -194,7 +194,7 @@ const TrialMonitorTable = ({
   // Render sort indicator
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return null;
-    return sortDirection === 'asc' 
+    return sortDirection === 'asc'
       ? <ArrowUp className="ml-1 h-3 w-3 inline" />
       : <ArrowDown className="ml-1 h-3 w-3 inline" />;
   };
@@ -206,27 +206,33 @@ const TrialMonitorTable = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead 
+                <TableHead
                   className="whitespace-nowrap sticky left-0 z-20 bg-background cursor-pointer"
                   onClick={() => handleSort('name')}
                 >
                   Account Name {renderSortIcon('name')}
                 </TableHead>
-                <TableHead 
+                <TableHead
                   className="whitespace-nowrap cursor-pointer"
                   onClick={() => handleSort('account_type')}
                 >
                   Account Type {renderSortIcon('account_type')}
                 </TableHead>
-                <TableHead 
+                {/* <TableHead
                   className="whitespace-nowrap cursor-pointer"
                   onClick={() => handleSort('status')}
                 >
                   Status {renderSortIcon('status')}
-                </TableHead>
+                </TableHead> */}
                 {sortedData.length > 0 && sortedData[0].monthly_data.map((month, index) => (
-                  <TableHead key={index} className="whitespace-nowrap text-right">
-                    {month.month}
+                  <TableHead
+                    key={index}
+                    className="whitespace-nowrap text-right cursor-pointer"
+                    onClick={() => handleSort(index)}
+                  >
+                    {month.month.split("-")[0]}
+                    <div className="text-xs text-muted-foreground">- {month.month.split("-")[1]}</div>
+                    {/* {renderSortIcon(index)} */}
                   </TableHead>
                 ))}
               </TableRow>
@@ -235,20 +241,20 @@ const TrialMonitorTable = ({
               {sortedData.length > 0 ? (
                 sortedData.map((account) => {
                   const status = getAccountStatus(account);
-                  
+
                   return (
-                    <TableRow 
+                    <TableRow
                       key={account.account_id}
                       className={`cursor-pointer hover:bg-muted ${selectedAccount?.account_id === account.account_id ? 'bg-muted' : ''}`}
                       onClick={() => handleRowClick(account)}
                     >
                       <TableCell className="font-medium sticky left-0 bg-background z-10">{account.name}</TableCell>
                       <TableCell>{account.account_type}</TableCell>
-                      <TableCell>{renderStatusBadge(status)}</TableCell>
-                      
+                      {/* <TableCell>{renderStatusBadge(status)}</TableCell> */}
+
                       {account.monthly_data.map((month, index) => (
-                        <TableCell 
-                          key={index} 
+                        <TableCell
+                          key={index}
                           className={`text-right ${getBgColor(month.valid_txn_cnt)}`}
                         >
                           {formatNumber(month.valid_txn_cnt)}
@@ -268,7 +274,7 @@ const TrialMonitorTable = ({
           </Table>
         </div>
       </ScrollArea>
-      
+
       {selectedAccount && (
         <Card className="mt-6 animate-in fade-in duration-300">
           <CardHeader>
@@ -292,9 +298,9 @@ const TrialMonitorTable = ({
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar 
-                        dataKey="Transactions" 
-                        fill="#8884d8" 
+                      <Bar
+                        dataKey="Transactions"
+                        fill="#8884d8"
                         isAnimationActive={true}
                       >
                         {getChartData().map((entry, index) => (
@@ -325,7 +331,7 @@ const TrialMonitorTable = ({
                       {formatNumber(selectedAccount.monthly_data.reduce((sum, month) => sum + month.valid_txn_cnt, 0))}
                     </p>
                   </div>
-                  
+
                   {/* Display account metadata if available */}
                   {selectedAccount.metadata && (
                     <>
